@@ -5,7 +5,7 @@ from the vulnerability experiments summarized in [EVIDENCE.md](EVIDENCE.md).
 
 | Check | Result |
 | --- | --- |
-| Python inventory/CLI and source-search regression tests | 28 tests passed locally |
+| Python inventory/CLI and source-search regression tests | 30 tests passed locally |
 | Version-boundary subcases | Includes 17 introduction boundary, four fixed baselines, historical branches and vulnerable 25.0.4.1 |
 | Missing/contradictory evidence | Missing CPU/flags, unreadable exports and mixed CPU capabilities remain unknown |
 | Mitigations / parsing | Both workaround flags, jcmd and PrintFlagsFinal forms, CPU spelling aliases and OpenJ9 distinction exercised |

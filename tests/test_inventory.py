@@ -44,6 +44,9 @@ class VersionTests(unittest.TestCase):
     def test_perf_not_cleared(self):
         self.assertEqual(inv.version_status('java version "1.8.0_511-perf"'), 'unknown')
 
+    def test_perf_flag_is_not_perf_distribution(self):
+        self.assertEqual(inv.version_status('java version "1.8.0_402"\nUsePerfData = true'), 'outside_range')
+
     def test_invalid_version(self):
         self.assertIsNone(inv.parse_version('java: command not found'))
 
@@ -93,6 +96,12 @@ class EvidenceTests(unittest.TestCase):
 
     def test_conflicting_export(self):
         self.assertEqual(self.report(flags=FLAGS + 'UseBASE64Intrinsics = false')['verdict'], 'unknown')
+
+    def test_conflicting_export_formats(self):
+        for flags in ('UseBASE64Intrinsics = false\n-XX:+UseBASE64Intrinsics -XX:UseAVX=3',
+                      FLAGS + '-XX:-UseBASE64Intrinsics'):
+            with self.subTest(flags=flags):
+                self.assertEqual(self.report(flags=flags)['verdict'], 'unknown')
 
     def test_fixed_version_without_flags(self):
         self.assertEqual(self.report(version='21.0.13.1', flags='')['verdict'], 'not_affected')

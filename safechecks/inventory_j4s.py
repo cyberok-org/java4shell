@@ -28,7 +28,7 @@ def version_status(text):
         return 'unknown'
     major = version[0]
     # Oracle's separate 8u-perf lineage must not inherit the community-8 result.
-    if (major == 8 or version[:2] == (1, 8)) and 'perf' in text.lower():
+    if (major == 8 or version[:2] == (1, 8)) and re.search(r'\d[^\s"]*-perf\b', text, re.I):
         return 'unknown'
     if major in (8, 11) or version[:2] == (1, 8):
         return 'outside_range'
@@ -70,16 +70,15 @@ def parse_flags(text):
     flags = {}
     for name, kind in [('UseBASE64Intrinsics', 'bool'), ('UseAVX', 'int')]:
         values = re.findall(r'\b' + name + r'\s*:?=\s*(true|false|\d+)\b', text)
+        if kind == 'bool':
+            values += ['true' if sign == '+' else 'false' for sign in
+                       re.findall(r'-XX:([+-])UseBASE64Intrinsics\b', text)]
         if len(set(values)) == 1:
             value = values[0]
             if kind == 'bool' and value in ('true', 'false'):
                 flags[name] = value == 'true'
             elif kind == 'int' and value.isdigit():
                 flags[name] = int(value)
-    # jcmd VM.flags format, as well as PrintFlagsFinal.
-    signs = re.findall(r'-XX:([+-])UseBASE64Intrinsics\b', text)
-    if len(set(signs)) == 1 and 'UseBASE64Intrinsics' not in flags:
-        flags['UseBASE64Intrinsics'] = signs[0] == '+'
     return flags
 
 
