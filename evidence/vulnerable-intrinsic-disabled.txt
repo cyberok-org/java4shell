@@ -1,0 +1,9 @@
+java.version=21.0.13
+vm=OpenJDK 64-Bit Server VM useBase64Intrinsics.flag=release
+trigger.len=67 caughtIAE=true canary.before=64 canary.after=64 canary.after.hex=0x40 corrupted=false
+java.version=21.0.13
+vm=OpenJDK 64-Bit Server VM useBase64Intrinsics.flag=release
+trigger.len=67 caughtIAE=true canary.before=64 canary.after=64 canary.after.hex=0x40 corrupted=false
+java.version=21.0.13
+vm=OpenJDK 64-Bit Server VM useBase64Intrinsics.flag=release
+trigger.len=67 caughtIAE=true canary.before=64 canary.after=64 canary.after.hex=0x40 corrupted=false

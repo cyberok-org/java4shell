@@ -1,0 +1,2 @@
+bool UseBASE64Intrinsics = true {product} {default}
+int UseAVX = 3 {ARCH product} {default}

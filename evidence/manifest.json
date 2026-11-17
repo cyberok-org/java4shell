@@ -1,0 +1,27 @@
+[
+  {
+    "file": "vulnerable-default.txt",
+    "sha256": "c8392cce5a8f86d069c7327cb11c93d761967d0594f1afec3260d4472a56bedd",
+    "selection": "version, VM identity, canary result and relevant flag lines only"
+  },
+  {
+    "file": "vulnerable-intrinsic-disabled.txt",
+    "sha256": "733b837563ebc50bf254e7d8762ba90f1ea8c62552abcf96fa1d8cc7090355c1",
+    "selection": "version, VM identity, canary result and relevant flag lines only"
+  },
+  {
+    "file": "fixed-default.txt",
+    "sha256": "a6fe1a8ae85d962cf33c527d078326df0565954aeefad99b980466d5227c5df5",
+    "selection": "version, VM identity, canary result and relevant flag lines only"
+  },
+  {
+    "file": "vulnerable-flags.txt",
+    "sha256": "5b8108bffef3cb40b5e294e905fd185d4a1b07292426c1b8b5275908612f0335",
+    "selection": "version, VM identity, canary result and relevant flag lines only"
+  },
+  {
+    "file": "fixed-flags.txt",
+    "sha256": "5b8108bffef3cb40b5e294e905fd185d4a1b07292426c1b8b5275908612f0335",
+    "selection": "version, VM identity, canary result and relevant flag lines only"
+  }
+]

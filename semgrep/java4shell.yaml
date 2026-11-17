@@ -1,0 +1,45 @@
+rules:
+  - id: java4shell-two-argument-decode
+    languages: [java]
+    severity: WARNING
+    message: >-
+      JDK Base64 decode with caller-supplied destination. Review whether untrusted
+      input reaches this call and whether dst is reused. A match alone does not
+      prove vulnerability, buffer lifetime, or exploitability. Check JVM/CPU/flags.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: MEDIUM
+      technology: [java]
+    pattern-either:
+      - pattern: java.util.Base64.getDecoder().decode($SRC, $DST)
+      - pattern: java.util.Base64.getUrlDecoder().decode($SRC, $DST)
+
+  - id: java4shell-decoder-variable-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      Two-argument call through a Base64.Decoder variable. Verify its origin:
+      getMimeDecoder() is outside this defect. Then inspect untrusted input and
+      destination reuse. This is a review candidate, not a confirmed vulnerability.
+    metadata:
+      category: security
+      confidence: LOW
+      technology: [java]
+    patterns:
+      - pattern: (java.util.Base64.Decoder $DEC).decode($SRC, $DST)
+
+  - id: java4shell-one-argument-inventory
+    languages: [java]
+    severity: INFO
+    message: >-
+      JDK Basic/URL Base64 decoding surface. A fresh destination often makes
+      corruption externally silent; it does not make this path safe on an
+      affected runtime. Review data flow and runtime prerequisites.
+    metadata:
+      category: security
+      confidence: MEDIUM
+      technology: [java]
+    pattern-either:
+      - pattern: java.util.Base64.getDecoder().decode($SRC)
+      - pattern: java.util.Base64.getUrlDecoder().decode($SRC)
