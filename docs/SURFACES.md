@@ -18,18 +18,36 @@ All confirmed paths below use **one-argument decoding/new destination arrays**.
 The higher-priority caller-supplied reused-buffer form was not found in the
 reviewed platform call sites. Custom application code still needs review.
 
+## How to use this list for patch prioritization
+
+A reachable listed path plus the runtime prerequisites is sufficient reason to
+schedule a JVM security update. **Reproducing a crash in the product is not a
+prerequisite for remediation.** Quiet allocation behavior can conceal the native
+write; a 401 response, normal health check or absent fatal-error log does not clear
+the deployment. Conversely, this list does not prove a particular deployment is
+reachable or runs the affected code.
+
+Record the service owner, exact running JVM build, guest-visible CPU features,
+effective flags, enabled path and update owner in your own remediation tracker.
+For bundled runtimes, use a supported product/runtime update and verify the running
+process afterward. Updating a library or host OS Java while leaving the service's
+bundled JVM unchanged does not fix this defect. These tables intentionally contain
+no customer deployment inventory or host identifiers.
+
 ## Servers and applications
 
 | Component | Reviewed path / version scope | Evidence |
 | --- | --- | --- |
 | Tomcat | `BasicAuthenticator.BasicCredentials.parseBase64`; switch to JDK decoder at 9.0.89 / 10.1.23, also 11.x | Source; lab 9.0.89 and 11.x |
 | Tomcat HTTP/2 | `Http2Protocol.accept` decodes `HTTP2-Settings`; structured-field binary values are another reviewed path | Source; lab 11.x with relevant HTTP/2 configuration |
+| TomEE | Reviewed 10.x/11 dependency pins inherit Tomcat 10.1.61/11.0.27 decoding paths; reviewed 9.x pin uses Tomcat 10.0.27's earlier codec | Dependency pins verified in campaign; no separate TomEE product lab |
 | Spring Security | Servlet `BasicAuthenticationConverter`, verified 5.8/6.x and reviewed main; do not infer all earlier 5.x | Source; Spring Boot 3.2.5 / Security 6.2.x lab |
 | Elasticsearch | `UsernamePasswordToken.extractToken` Basic; API-key parsing; separate SAML IdP signature path | Source; Basic lab 8.11.4/JDK 21.0.1 |
 | Jetty | `BasicAuthenticator`, reviewed 9.4+ and later branches; exact deployment branch must be checked | Source |
 | Jenkins | `BasicHeaderProcessor` / `BasicAuthenticationFilter` | Source |
 | Solr | `BasicAuthPlugin` when Basic authentication is configured; release floor not established here | Source |
 | Zimbra | Container Jetty authentication path in reviewed 10.x configurations; not every Zimbra codec | Source |
+| Keycloak | SAML artifact binding: `ArtifactBindingUtils` decodes the artifact with the JDK Basic decoder | Campaign source record for reviewed 26.x path; no product lab; confirm the artifact-binding flow in deployment |
 | Jira / Confluence DC | Seraph `SecurityUtils.decodeBasicAuthorizationCredentials`; reviewed Seraph 4.0.4/5.0.7/6.0.2 | Bytecode |
 | Neo4j | `AuthorizationHeaders`, server HTTP authentication / query API paths | Source |
 | SonarQube | `BasicAuthentication` called during request authentication | Source |
@@ -39,6 +57,7 @@ reviewed platform call sites. Custom application code still needs review.
 | Apache James | `SaslCodec.decodeClientResponse` used by authentication handlers | Source; JVM version remains decisive |
 | ActiveMQ Classic | `WebClient` authentication handling in web/REST surface; not a claim about all messaging protocols | Source |
 | JDK HTTP server / Jolokia agent | `com.sun.net.httpserver.BasicAuthenticator`; reviewed Jolokia agent subclass | Source; other Jolokia packaging differs |
+| Open Liberty | `H2ConnectionSettings.decode` uses the JDK Basic decoder for HTTP/2 settings | Source extract verified; h2c configuration/route must be reachable; not the separate Basic-auth path |
 
 ## Libraries and frameworks
 
@@ -50,7 +69,11 @@ reviewed platform call sites. Custom application code still needs review.
 | Spring Framework | `Base64Utils` one-argument delegation in versions that contain it | Wrapper inventory; not a two-argument API finding |
 | auth0 java-jwt | `JWTDecoder` URL decoding of token segments | 3.15.0 switches to JDK Base64; 3.14.0 used Commons Codec |
 | fusionauth-jwt | `JWTDecoder` URL decoding | Source; do not assume every JWT library has the same codec |
-| Micronaut / RESTEasy / Helidon / fastjson2 | Named Basic, h2c or binary-JSON call sites reported in the campaign | Source-review records only; pin the deployed release and inspect the enabled path before assigning exposure |
+| Quarkus | `BasicAuthenticationMechanism` one-argument Basic decoding reported in the campaign | Campaign source record; application authentication configuration matters; separate MIME/multipart paths are outside this mechanism |
+| Micronaut Security | `BasicAuthUtils` called by `BasicAuthAuthenticationFetcher` | Campaign source record; Basic module/path must be enabled; native-image deployments do not use this HotSpot stub |
+| RESTEasy | JDK HTTP adapter `BasicAuthFilter` / `BasicAuthHelper` | Campaign source record; check the actual adapter and authentication configuration |
+| Helidon 4 | `HttpBasicAuthProvider`; `Http2Upgrader` decoding of `HTTP2-Settings` | Campaign source record; Basic and h2c are separate configuration-dependent routes |
+| fastjson2 | `JSONReader.readBinary` / `readBase64` decoding Base64 strings | Campaign source record; inspect the reader path and `Base64StringAsByteArray` feature where applicable |
 | JDK HTTP client | `NegotiateAuthentication` decoding a server challenge | Source; reverse direction: attacker-controlled server/proxy response, only when that authentication flow is used |
 
 The presence of a library does not prove that an application parses the relevant
@@ -73,6 +96,11 @@ some downloaded extracts were error pages. A JDK URL-decoder helper was identifi
 but this pack does **not** promote the unresolved Basic path to confirmed status.
 The proposed jmx_exporter inheritance path was also not established and is omitted
 from the confirmed list.
+
+A JDK decoder call in Grizzly's `SecKey` was verified, but that alone does not
+establish that a sufficiently long attacker-controlled WebSocket key reaches it:
+the preceding validation and caller path need review. It is not included as a
+confirmed attack route in the update-prioritization table.
 
 Closed components such as Artifactory, ColdFusion, AEM Granite, ManageEngine and
 YouTrack remain candidates requiring version-specific implementation review.

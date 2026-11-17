@@ -85,5 +85,5 @@ Only the explicitly selected evidence lines and newly prepared public tools/docs
 are included. The original research notebook, lab scripts, target inventories,
 credentials, private paths and host identifiers are excluded. Public repository
 owner names and upstream author/product names are intentional attribution, not
-laboratory environment identifiers. Git author metadata uses the public project
-identity rather than a local personal account/email.
+laboratory environment identifiers. Git author metadata uses the repository owner's
+public GitHub identity and account-specific noreply address rather than a local mailbox.

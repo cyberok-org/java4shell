@@ -16,6 +16,52 @@ our evidence**. The link between the tracked CVE and JDK-8393212 was inferred
 from source and patch analysis; do not mistake this repository for an official
 CNA/vendor advisory. See [evidence and limits](docs/EVIDENCE.md).
 
+## Products to prioritize for runtime updates: quiet sinks
+
+**Do not wait for a crash before patching a reachable affected runtime.** The
+campaign found JDK Base64 call paths in the products below. They use freshly
+allocated output arrays: the memory write can be externally silent, and an
+ordinary authentication error or healthy service does not establish safety.
+"Quiet sink" names this allocation pattern; it does not guarantee a quiet outcome.
+
+This is an **update-prioritization list**, conditional on the
+[runtime prerequisites](#runtime-scope) and the named feature being reachable.
+It does not mean every release or deployment of each product is exploitable.
+The defect is in the JVM: a product update is sufficient only if it actually
+replaces/fixes the runtime used by the service.
+
+| Product / stack | Reviewed route to JDK Base64 | Evidence and scope |
+| --- | --- | --- |
+| **Apache Tomcat / TomEE** | Basic authentication; Tomcat also has HTTP/2 decoding paths | Tomcat switch: 9.0.89 / 10.1.23, also 11.x; TomEE 10.x/11 inherits newer Tomcat. Tomcat lab + source; TomEE dependency review |
+| **Spring Boot applications using Spring Security** | Servlet HTTP Basic credential conversion before authentication | Security 5.8/6.x and reviewed main; Boot 3.2.5/Security 6.2.x lab. Not every Boot application enables HTTP Basic |
+| **Elasticsearch** | Basic / API-key decoding; separate SAML IdP signature path | Basic lab on 8.11.4; other paths source-reviewed. Check the bundled or explicitly configured JDK |
+| **Jetty, Jenkins, Solr, Zimbra** | Basic/authentication handling in product filters or the embedded container | Source-reviewed paths; Solr Basic must be configured, Zimbra entry concerns its Jetty path |
+| **Jira / Confluence Data Center** | Seraph Basic credential decoding | Bytecode-reviewed Seraph 4.0.4/5.0.7/6.0.2; deployed JVM/version remains decisive |
+| **Neo4j, SonarQube** | HTTP authentication parsing | Source-reviewed paths; version and feature details in the matrix |
+| **Keycloak** | SAML artifact decoding | Campaign source record for the SAML artifact path; do not generalize the separate JWT-path negative result |
+| **Openfire, Kafka, Apache James** | SASL initial response, SCRAM fields, or mail authentication decoding | Source-reviewed protocol paths; authentication mechanism and protocol state matter |
+| **NiFi, ActiveMQ Classic** | Encoded proxied-entity handling; ActiveMQ web/REST authentication | Source-reviewed paths; not a claim about every messaging protocol |
+| **JDK HTTP server / Jolokia JVM agent** | JDK `BasicAuthenticator` | Source-reviewed JDK path and Jolokia agent subclass; other Jolokia packaging differs |
+| **Open Liberty** | HTTP/2 `HTTP2-Settings` decoding | Source-reviewed h2c path; this is distinct from the reviewed Basic-auth codec |
+
+Library-level entry points also widen the update scope: **protobuf-java-util
+4.33.0** JSON `bytes` parsing, **SnakeYAML** `!!binary`, **pac4j**, **Spring
+Base64Utils**, **auth0 java-jwt 3.15.0+**, **fusionauth-jwt**, and the campaign's
+reviewed **Quarkus, Micronaut, RESTEasy, Helidon and fastjson2** paths. Applications must
+actually pass untrusted data through the named feature. Older protobuf and JWT
+library versions can use different codecs; package presence alone is insufficient.
+
+**Product-level runs:** the documented Elasticsearch, Tomcat and Spring Security
+runs exercised decoding paths without an observed JVM crash. **Other entries:**
+source, bytecode or dependency evidence, not a reproduced product DoS. No reused
+destination-buffer call site was established in the audited product paths.
+
+See the [full product/library matrix](docs/SURFACES.md) for named call sites,
+version qualifications, negative paths and unresolved candidates. If a listed
+path is reachable on an affected runtime, schedule the runtime update even when
+normal monitoring is silent; use the verified interim mitigation if rollout must
+wait. Give custom code with reused destination buffers the highest review priority.
+
 ## Contents
 
 | Component | Purpose |
