@@ -11,7 +11,7 @@ from the vulnerability experiments summarized in [EVIDENCE.md](EVIDENCE.md).
 | Mitigations / parsing | Both workaround flags, jcmd and PrintFlagsFinal forms, CPU spelling aliases and OpenJ9 distinction exercised |
 | Diagnostic JVM environment | Java option variables removed from helper process; no target code or agent executed by tests |
 | Source-search helper | Java/Kotlin, multiline calls, whitespace in paths, no-match and missing-root exit codes passed |
-| Semgrep 1.185.0 | All three rule test groups passed with positive/negative annotated Java fixtures |
+| Semgrep 1.185.0 | All ten rule test groups passed; positive/negative fixtures cover size boundaries, fields/names, typed receivers, MIME exclusions/review aliases and library wrappers |
 | ModSecurity shipped-pattern tests | 35 synthetic HTTP cases, every length from 1 through 259, and 512 valid Base64/Base64url controls; patterns read from the published config |
 | Public source links | Tomcat, Spring Security, Elasticsearch, auth0 java-jwt and protobuf linked implementations fetched and decoder calls confirmed |
 | Selected evidence | SHA-256 manifest verified against included log excerpts |

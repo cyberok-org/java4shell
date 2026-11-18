@@ -1,4 +1,7 @@
 rules:
+  # Static review candidates, not vulnerability or exploitability verdicts.
+  # Runtime version, CPU features, effective flags and input reachability must
+  # be checked separately. Fresh arrays are not a security boundary.
   - id: java4shell-two-argument-decode
     languages: [java]
     severity: WARNING
@@ -24,6 +27,7 @@ rules:
       destination reuse. This is a review candidate, not a confirmed vulnerability.
     metadata:
       category: security
+      cve: CVE-2026-114938
       confidence: LOW
       technology: [java]
     patterns:
@@ -38,8 +42,146 @@ rules:
       affected runtime. Review data flow and runtime prerequisites.
     metadata:
       category: security
+      cve: CVE-2026-114938
       confidence: MEDIUM
       technology: [java]
     pattern-either:
       - pattern: java.util.Base64.getDecoder().decode($SRC)
       - pattern: java.util.Base64.getUrlDecoder().decode($SRC)
+
+  - id: java4shell-inline-large-buffer-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      JDK Base64 decoding into an inline array larger than 1024 bytes. This is
+      a review heuristic, not a vulnerability threshold. Compare capacity with
+      the logical decoded length: an erroneous store may remain inside the array
+      yet overwrite data beyond the intended output. Inspect subsequent reads
+      and exception handling; size alone does not prove application impact.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: LOW
+      technology: [java]
+    patterns:
+      - pattern-either:
+          - pattern: java.util.Base64.getDecoder().decode($SRC, new byte[$N])
+          - pattern: java.util.Base64.getUrlDecoder().decode($SRC, new byte[$N])
+          - pattern: (java.util.Base64.Decoder $DEC).decode($SRC, new byte[$N])
+      - metavariable-comparison:
+          metavariable: $N
+          comparison: int($N) > 1024
+
+  - id: java4shell-inline-buffer-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      JDK Base64 decoding into a fresh caller-supplied array. Review capacity
+      relative to the logical output, later reads and exception handling. A fresh
+      or oversized destination does not establish safety. For a typed decoder
+      variable, verify Basic/URL origin; MIME decoding is outside this defect.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: MEDIUM
+      technology: [java]
+    pattern-either:
+      - pattern: java.util.Base64.getDecoder().decode($SRC, new byte[$N])
+      - pattern: java.util.Base64.getUrlDecoder().decode($SRC, new byte[$N])
+      - pattern: (java.util.Base64.Decoder $DEC).decode($SRC, new byte[$N])
+
+  - id: java4shell-field-destination-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      JDK Base64 destination is a qualified field. Inspect allocation, lifetime
+      and reuse; a field expression alone does not prove a long-lived buffer or
+      predictable neighbor corruption. Verify Basic/URL decoder origin, untrusted
+      input and runtime prerequisites before assigning vulnerability status.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: LOW
+      technology: [java]
+    patterns:
+      - pattern-either:
+          - pattern: java.util.Base64.getDecoder().decode($SRC, $DST)
+          - pattern: java.util.Base64.getUrlDecoder().decode($SRC, $DST)
+          - pattern: (java.util.Base64.Decoder $DEC).decode($SRC, $DST)
+      - pattern-either:
+          - pattern: $RECEIVER.decode($SRC, this.$F)
+          - pattern: $RECEIVER.decode($SRC, $OWNER.$F)
+
+  - id: java4shell-buffer-name-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      JDK Base64 destination has a buffer/pool/cache-like name. This naming
+      heuristic does not establish reuse: ordinary fresh buffers also match.
+      Trace allocation and lifetime, confirm Basic/URL decoder origin and check
+      untrusted input plus the deployed JVM/CPU/flags.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: LOW
+      technology: [java]
+    patterns:
+      - pattern-either:
+          - pattern: java.util.Base64.getDecoder().decode($SRC, $DST)
+          - pattern: java.util.Base64.getUrlDecoder().decode($SRC, $DST)
+          - pattern: (java.util.Base64.Decoder $DEC).decode($SRC, $DST)
+      - metavariable-regex:
+          metavariable: $DST
+          regex: "(?i).*(pool|cache|threadlocal|reusable|shared|buf).*"
+
+  - id: java4shell-spring-base64utils-inventory
+    languages: [java]
+    severity: INFO
+    message: >-
+      Spring Base64Utils one-argument decoding surface. Verify that the deployed
+      implementation delegates to JDK Basic/URL Base64 and that untrusted input
+      reaches it. Fresh allocation does not establish safety on an affected
+      runtime. This is library-call inventory, not a confirmed vulnerability.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: MEDIUM
+      technology: [java, spring]
+    pattern-either:
+      - pattern: org.springframework.util.Base64Utils.decode($SRC)
+      - pattern: org.springframework.util.Base64Utils.decodeFromString($SRC)
+
+  - id: java4shell-protobuf-json-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      Protobuf JSON parsing may decode bytes fields through JDK Base64. This was
+      verified for protobuf-java-util 4.33.0; reviewed older versions use another
+      codec. Check the deployed implementation, message schema, reachable bytes
+      fields, untrusted input and runtime prerequisites. A merge call alone does
+      not prove that Base64 decoding occurs.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: LOW
+      technology: [java, protobuf]
+    pattern-either:
+      - pattern: com.google.protobuf.util.JsonFormat.parser().merge($IN, $BUILDER)
+      - pattern: (com.google.protobuf.util.JsonFormat.Parser $PARSER).merge($IN, $BUILDER)
+
+  - id: java4shell-snakeyaml-load-review
+    languages: [java]
+    severity: WARNING
+    message: >-
+      SnakeYAML loading can expose Base64 decoding through the !!binary tag.
+      Check the deployed version and constructor, whether binary tags are
+      accepted, and whether untrusted YAML reaches this call. A load call alone
+      does not prove this decoder is used or that the JVM is affected.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: LOW
+      technology: [java, snakeyaml]
+    pattern-either:
+      - pattern: new org.yaml.snakeyaml.Yaml(...).load($IN)
+      - pattern: (org.yaml.snakeyaml.Yaml $YAML).load($IN)

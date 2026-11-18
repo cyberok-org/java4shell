@@ -82,6 +82,16 @@ will crash: capacity, object placement, JIT state and data flow still matter.
 The audit did not identify this reused-destination form in the reviewed product
 paths. That is a bounded search result, not a claim about all versions or plugins.
 
+Caller-supplied capacity is a separate concern from lifetime. With an oversized
+destination, an erroneous store can remain inside the array allocation while
+changing bytes beyond the logical decoded output. This does not by itself prove
+application-field corruption or RCE: establish what data occupies that region,
+whether a reference remains available, and whether later reads occur despite a
+decode exception. Even an inline fresh allocation deserves capacity review;
+neither its size nor its syntax proves a deterministic application impact. The
+[Semgrep size rules](../semgrep/README.md) flag these review questions without
+using their 1024-byte heuristic as a vulnerability threshold.
+
 ### Newly allocated destination
 
 The ordinary one-argument array/String call allocates its destination immediately

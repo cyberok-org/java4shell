@@ -96,7 +96,7 @@ or the applications for which Calif reports RCE.
 | Component | Purpose |
 | --- | --- |
 | [Runtime inventory](safechecks/README.md) | Offline exports or a local diagnostic JVM; version, CPU features and effective flags; JSON output and explicit unknown results |
-| [Semgrep rules](semgrep/README.md) | Java Basic/URL decoder inventory and caller-supplied-buffer review candidates |
+| [Semgrep rules](semgrep/README.md) | Ten Java rules for decoder inventory, destination size/lifetime review and Spring/protobuf/SnakeYAML entry points |
 | [Lightweight source search](safechecks/scan-source.sh) | Optional ripgrep search for Java/Kotlin call sites, including multiline calls |
 | [ModSecurity indicators](modsecurity/README.md) | Nine log-only HTTP detectors for selected malformed Base64 shapes; optional JSON parser setup, synthetic tests and explicit coverage limits |
 | [Technical analysis](docs/ANALYSIS.md) | Root cause, CPU gating, allocation behavior, JIT effects and exploitation limits |
