@@ -4,3 +4,5 @@ __pycache__/
 .DS_Store
 .semgrep/
 results*.json
+ids-results*.json
+*.pcap

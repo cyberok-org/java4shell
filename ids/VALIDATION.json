@@ -1,0 +1,58 @@
+{
+  "checked_at": "2026-11-18T07:39:42.589542+00:00",
+  "scope": "synthetic offline PCAP indicators; no JVM or exploitation test",
+  "upstream_source": "https://github.com/jsik22/java4shell-detection/tree/e7d3ddb969b93799e6d31e13da5b300590e8f01a",
+  "engines": [
+    {
+      "engine": "suricata",
+      "cases": 442,
+      "counts": {
+        "indicator": 75,
+        "negative": 358,
+        "reference": 6,
+        "known_gap": 3
+      },
+      "known_gaps": [
+        "pack-json-escaped",
+        "extended-query-encoded-alphabet",
+        "extended-json-escaped-remains-covered"
+      ],
+      "failures": [],
+      "image": "jasonish/suricata@sha256:6f915ca62512c9859e888648765515b73b209dfa8a03a65edf1607f17e11fa51",
+      "image_digests": [
+        "jasonish/suricata@sha256:6f915ca62512c9859e888648765515b73b209dfa8a03a65edf1607f17e11fa51"
+      ],
+      "engine_version_lines": [
+        "This is Suricata version 7.0.17 RELEASE",
+        "i: suricata: This is Suricata version 7.0.17 RELEASE running in SYSTEM mode",
+        "i: suricata: This is Suricata version 7.0.17 RELEASE running in USER mode"
+      ],
+      "rules_sha256": "2a2fff182f792cff28cca590bf3e02d898dfbce783f9094e6c1e01e6fb3e211a"
+    },
+    {
+      "engine": "snort",
+      "cases": 442,
+      "counts": {
+        "indicator": 75,
+        "negative": 358,
+        "reference": 6,
+        "known_gap": 3
+      },
+      "known_gaps": [
+        "pack-json-escaped",
+        "extended-query-encoded-alphabet",
+        "extended-json-escaped-remains-covered"
+      ],
+      "failures": [],
+      "image": "ciscotalos/snort3@sha256:f15f714fd61ade114b1039687dd43352cae26cd6401b89f2b03404e0d21e322f",
+      "image_digests": [
+        "ciscotalos/snort3@sha256:f15f714fd61ade114b1039687dd43352cae26cd6401b89f2b03404e0d21e322f"
+      ],
+      "engine_version_lines": [
+        ",,_     -*> Snort++ <*-",
+        "o\")~   Snort++ 3.10.0.0"
+      ],
+      "rules_sha256": "9e071d99a821e94a3087cbc37708df2ce0dd1dbdcf085f863fb102affb5a7127"
+    }
+  ]
+}

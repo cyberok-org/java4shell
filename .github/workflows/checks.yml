@@ -18,6 +18,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ripgrep
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m unittest discover -s tests -v
+      - run: python -m unittest discover -s ids/tests -v
       - run: semgrep --test --config semgrep tests/semgrep
   modsecurity:
     runs-on: ubuntu-latest
@@ -26,3 +27,15 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -f tests/modsecurity/Dockerfile -t java4shell-modsecurity-test .
       - run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges java4shell-modsecurity-test
+      - run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges java4shell-modsecurity-test python3 /test/engine_test.py --experimental
+  ids:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 ids/tests/run.py --report ids-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ids-results
+          path: ids-results.json

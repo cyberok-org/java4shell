@@ -87,11 +87,16 @@ can still produce alerts. Body parsing and connector behavior matter.
 
 A pattern-only alert cannot establish JVM version, CPU capabilities, JIT execution
 or memory corruption. The ModSecurity checks exercise synthetic traffic against
-a static server, not an exploit against Java. No validated PCAP-based Suricata,
-Sigma or Nuclei exploit-attribution detector accompanies this release. Follow the
+a static server, not an exploit against Java. The optional
+[IDS module](../ids/README.md) adds Suricata/Snort synthetic-PCAP regression tests;
+it is also an indicator set, not exploit attribution. No Sigma or Nuclei
+exploit-attribution detector accompanies this release. Follow the
 deployment guide's logging/privacy controls and coverage limits.
 
 These rules have not been validated against Calif's withheld product RCE chains.
+The WAF's [opt-in extension](../modsecurity/README.md#optional-experimental-http-coverage)
+adds selected query, form, cookie, JWT and custom-header surfaces. Review its
+field semantics and logging exposure before enabling it.
 Their absence of alerts cannot exclude exploitation or confidentiality/integrity
 impact; a successful chain need not crash the JVM.
 

@@ -99,6 +99,7 @@ or the applications for which Calif reports RCE.
 | [Semgrep rules](semgrep/README.md) | Ten Java rules for decoder inventory, destination size/lifetime review and Spring/protobuf/SnakeYAML entry points |
 | [Lightweight source search](safechecks/scan-source.sh) | Optional ripgrep search for Java/Kotlin call sites, including multiline calls |
 | [ModSecurity indicators](modsecurity/README.md) | Nine log-only HTTP detectors for selected malformed Base64 shapes; optional JSON parser setup, synthetic tests and explicit coverage limits |
+| [Experimental IDS module](ids/README.md) | Suricata/Snort alert-only indicators, offline PCAP tests, exact SID checks and explicit gaps; adapted from jsik22 under MIT |
 | [Technical analysis](docs/ANALYSIS.md) | Root cause, CPU gating, allocation behavior, JIT effects and exploitation limits |
 | [Surface matrix](docs/SURFACES.md) | Product/library paths, version caveats and evidence level |
 | [Response guide](docs/RESPONSE.md) | Updates, verified interim JVM options, operational verification and telemetry |
@@ -134,6 +135,10 @@ bash safechecks/scan-source.sh /path/to/source
 For WAF integration, see the [ModSecurity deployment guide](modsecurity/README.md).
 The supplied rules default to `pass + log`; they do not prove backend exposure or
 replace the JVM update. JSON inspection requires phase-1 body/parser setup.
+An optional experimental WAF file adds six detectors for query/form values,
+cookies, later JWT segments, selected custom headers and plain-text bodies.
+The separate IDS module complements these checks; it is not enabled by the WAF
+include and has different coverage and false-positive tradeoffs.
 
 Inventory exit codes: **0** = modeled path excluded or mitigated, **1** = runtime
 prerequisites present, **2** = unknown/incomplete. Exit 1 is not proof of network
@@ -228,8 +233,11 @@ These checks do not execute the vulnerability. [Validation details](docs/VALIDAT
 - [JDK 17u x86 stub generator](https://github.com/openjdk/jdk17u/blob/jdk-17.0.21-ga/src/hotspot/cpu/x86/stubGenerator_x86_64.cpp)
 - [OpenJDK vulnerability advisory index](https://openjdk.org/groups/vulnerability/advisories/)
 - [Companion PHP defense-tool repository](https://github.com/scadastrangelove/php2shell)
+- [jsik22/java4shell-detection: source of the experimental IDS rules and PCAP fixtures](https://github.com/jsik22/java4shell-detection/tree/e7d3ddb969b93799e6d31e13da5b300590e8f01a)
 
 ---
 
 (c) 2026 АО «Сайбер ОК» / JSC CyberOK. See [LICENSE](LICENSE) for the
 copyright and usage notice. This repository follows the companion project's notice.
+The separately licensed [experimental IDS module](ids/LICENSE) is MIT-licensed
+and retains upstream attribution.

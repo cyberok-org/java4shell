@@ -67,6 +67,38 @@ rules or override your existing blocking policy. Start with this log-only mode;
 any later blocking policy should be evaluated against your application's traffic
 and field semantics. These indicators are not a complete virtual patch.
 
+## Optional experimental HTTP coverage
+
+[`experimental-http.conf`](experimental-http.conf) adds six **opt-in**, log-only
+detectors. The core file does not include it automatically:
+
+```apache
+Include /etc/modsecurity/java4shell/experimental-http.conf
+```
+
+| ID | Inspected value | Scope |
+| --- | --- | --- |
+| 11493811 | Parsed `ARGS_GET` | Query parameter values, including URL-decoded values |
+| 11493812 | Parsed `ARGS_POST` | URL-encoded forms only; excludes JSON and multipart |
+| 11493813 | `REQUEST_COOKIES` | Cookie values, not names |
+| 11493814 | Authorization Bearer | Second or third JWT segment; first remains covered by 11493806 |
+| 11493815 | Selected custom headers | Whole values of `X-Auth-Token`, `X-Api-Key`, `X-CSRF-Token`; adapt this allowlist to real application fields |
+| 11493816 | `REQUEST_BODY` | Whole `text/plain` value; not arbitrary embedded text |
+
+Form and text inspection require request-body access enabled in phase 1. Existing
+ModSecurity form parsing is used; the optional JSON setup also enables body access.
+Setup rule 11493817 enables body access and forces `REQUEST_BODY` availability
+for `text/plain` in phase 1; it does not log an alert or change the body parser.
+Query, form and cookie fields can legitimately contain malformed-looking text
+without ever reaching a Base64 decoder. Keep these rules in log-only mode while
+reviewing field semantics. They retain the core 64-character block model; the
+broader IDS HUNT heuristics were not copied into every WAF field.
+
+This extension was informed by the routes and synthetic tests in
+[jsik22/java4shell-detection](https://github.com/jsik22/java4shell-detection/tree/e7d3ddb969b93799e6d31e13da5b300590e8f01a),
+also credited in the separate [experimental IDS module](../ids/README.md).
+Both the core-only and opt-in WAF configurations have engine regression cases.
+
 ## Logging and privacy
 
 The rule messages contain fixed descriptions and IDs, with no `capture` or
@@ -78,7 +110,8 @@ are included here. The test runner prints only synthetic case names and rule IDs
 
 ## Coverage limits
 
-- This pack does not cover every input path. JWT segments after the first, alternate
+- The core file does not cover JWT segments after the first; the opt-in extension
+  adds the second and third. Neither file covers every input path. Alternate
   token layouts, YAML, HTTP/2 settings/priority fields, SAML, non-HTTP Kafka/SASL,
   SMTP/IMAP and arbitrary application-specific encodings need separate handling.
 - `X-Solr-Certificate` is not covered by the SolrAuthV2 rule. Its legacy processing
@@ -108,13 +141,17 @@ so the checked patterns cannot silently drift from the published configuration.
 
 ```bash
 # Pattern/control tests; no third-party Python dependencies and no JVM execution.
-python3 -m unittest discover -s tests -p 'test_modsecurity.py' -v
+python3 -m unittest discover -s tests -p 'test_modsecurity*.py' -v
 
 # Actual Apache/ModSecurity checks against a static server inside one container.
 # Build downloads Debian packages. The test run has no external network or host ports.
 docker build -f tests/modsecurity/Dockerfile -t java4shell-modsecurity-test .
 docker run --rm --network none --cap-drop ALL \
   --security-opt no-new-privileges java4shell-modsecurity-test
+# Core plus the opt-in extension (61 HTTP cases).
+docker run --rm --network none --cap-drop ALL \
+  --security-opt no-new-privileges java4shell-modsecurity-test \
+  python3 /test/engine_test.py --experimental
 ```
 
 The engine test loads the real configuration and sends only synthetic transactions

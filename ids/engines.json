@@ -1,0 +1,5 @@
+{
+  "platform": "linux/amd64",
+  "suricata": "jasonish/suricata@sha256:6f915ca62512c9859e888648765515b73b209dfa8a03a65edf1607f17e11fa51",
+  "snort": "ciscotalos/snort3@sha256:f15f714fd61ade114b1039687dd43352cae26cd6401b89f2b03404e0d21e322f"
+}
