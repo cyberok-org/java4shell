@@ -6,10 +6,12 @@ The reviewed code is HotSpot's x86 `generate_base64_decodeBlock()` intrinsic,
 called from `java.util.Base64.Decoder`. The source-level guard installed by
 [JDK-8393212](https://github.com/openjdk/jdk27u/commit/564fc7de7effb8a4558604a6339f1b62f3017230)
 routes a final fragment shorter than one complete Base64 unit to the Java fallback.
-The campaign associated that change with the reported Java4Shell CVE. The observed
-memory defect and the official CVE-to-patch assignment are distinct claims: the
-former is backed by the local control results, while the latter needs the supplier's
-advisory as the authoritative reference.
+The campaign associated that change with Java4Shell through source and patch
+analysis. CVE-2026-114938 is now officially listed by
+[OpenJDK](https://openjdk.org/groups/vulnerability/advisories/2026-11-17) and
+[Oracle](https://www.oracle.com/security-alerts/cspunov2026.html). Use supplier
+advisories for affected packages and supported fixes; the campaign's source-level
+association is not an official CVE-to-commit assignment.
 
 The affected tail logic first derives the output count from complete four-character
 units, then subtracts padding. A fragment shorter than a complete unit can begin
@@ -58,9 +60,10 @@ fragment after accelerated block processing. Java 17's acceleration threshold
 differs from the newer studied lines, so a test appropriate for one line cannot
 automatically establish a negative result on another.
 
-This defense pack intentionally contains no trigger generator or exploit driver.
-The source-review fixtures are calls with abstract inputs, not malicious byte
-sequences. Runtime inventory does not invoke a decoder.
+This defense pack contains no executable JVM exploit driver. Source-review
+fixtures use abstract inputs; WAF tests generate synthetic malformed tokens for
+pattern checks against a static server with no Java backend. Runtime inventory
+does not invoke a decoder.
 
 ## Two destination-allocation patterns
 
@@ -104,17 +107,23 @@ process or garbage collector. The research supports a laboratory DoS scenario an
 repeatable live-object corruption; the published control logs directly demonstrate
 the latter. They do not establish reliable remote crashes of every listed product.
 
-The observed output pattern is largely fixed. The campaign's corrected analysis
-gave full control over the first byte and partial control over the next byte, not
-an arbitrary 64-byte write. No arbitrary pointer construction or end-to-end code
-execution was demonstrated. This limitation must not be turned into a proof that
-RCE is impossible. We do not assign a new CVSS score or borrow a CPU-wide maximum
-as if it were an official score for this specific defect.
+The observed output pattern is largely fixed. Full control over the first byte
+and partial control over the next byte do not constitute an arbitrary 64-byte
+write; in the ordinary allocation these initial bytes are in bounds. Our own
+tests did not demonstrate end-to-end code execution.
+
+That is a limit of our experiments, not an impact ceiling. In its
+[public disclosure](https://calif.io/java4shell/), Calif reports composing the
+corruption into information disclosure and application-specific RCE. Fresh output
+arrays and initially quiet corruption are not protection against such chains.
+See the [reported product/access list](../README.md#disclosure-update--2026-11-18).
+We have not independently reproduced those chains and do not assign a new score.
 
 ## Why patching remains necessary
 
 The CPU restriction materially reduces the exposed fleet, and allocation behavior
 can make exploitation difficult. Neither changes the existence of a native write
-past the Java allocation boundary. Fix the runtime, review custom reused-buffer
-paths first, and verify the runtime actually serving requests after restart.
+past the Java allocation boundary. Fix the runtime, prioritize exposed services
+and reported RCE targets, review custom reused-buffer paths, and verify the
+runtime actually serving requests after restart.
 Updating an OS JDK does not replace a bundled JDK in an application image.

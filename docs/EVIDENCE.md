@@ -69,10 +69,21 @@ candidates. It incorporates later corrections: protobuf 4.33.0 versus older Guav
 paths; auth0 java-jwt 3.15.0 versus 3.14.0; unresolved Vert.x Basic evidence;
 and the unestablished jmx_exporter inheritance claim.
 
-## What this release does not establish
+## External disclosure — 2026-11-18
+
+[Calif reports application-specific RCE](https://calif.io/java4shell/), including
+unauthenticated attacks, and publishes technical analysis and a demonstration.
+The [README](../README.md#disclosure-update--2026-11-18) records its product/access
+categories separately from our campaign results. Those external results do not
+turn our historical no-crash runs into RCE reproductions, and our no-crash runs
+do not refute Calif's results. Official CVE scope is now available from
+[OpenJDK](https://openjdk.org/groups/vulnerability/advisories/2026-11-17) and
+[Oracle](https://www.oracle.com/security-alerts/cspunov2026.html).
+
+## What our own tests do not establish
 
 - An official CVE-to-JDK-fix assignment on behalf of the vendor.
-- RCE, arbitrary 64-byte attacker control, or a practical exploit chain.
+- Independent reproduction of Calif's RCE chains or arbitrary 64-byte attacker control.
 - A measured universal probability of crashing one-argument decoder call sites.
 - A safe, decisive remote vulnerable/patched oracle.
 - Exploitation in the wild, an IOC set, or attribution of crashes to this defect.

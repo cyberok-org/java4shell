@@ -6,6 +6,10 @@ malformed Base64/base64url shapes at HTTP entry points. A match is an investigat
 signal, **not proof of an affected JVM, successful memory corruption or exploitation**.
 The rules make no requests and do not decode Base64 in the WAF.
 
+They have **not** been validated against the product RCE chains reported in
+[Calif's disclosure](https://calif.io/java4shell/). Synthetic pattern tests do not
+establish coverage of those chains; absence of an alert does not establish safety.
+
 ## Coverage
 
 | ID | Variable / route | Scope |

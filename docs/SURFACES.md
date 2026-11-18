@@ -6,6 +6,13 @@ features, effective flags and application reachability. "Pre-auth" means decode
 can precede credential verification in the named path; deployment policy may
 still limit who reaches that path.
 
+This inventory describes **our campaign's evidence**. Calif separately reports
+RCE in several overlapping products; see its
+[product/access categories](../README.md#disclosure-update--2026-11-18).
+Our pre-auth Elasticsearch decode path does not establish a pre-auth RCE chain;
+Calif reports authenticated RCE there. Do not use quiet allocation or a missing
+entry in either list to downgrade a reachable vulnerable runtime.
+
 Evidence labels:
 
 - **Product lab:** the campaign exercised the path in the named configuration;
@@ -15,7 +22,7 @@ Evidence labels:
 - **Candidate:** insufficient or conflicting evidence; not a confirmed exposure.
 
 All confirmed paths below use **one-argument decoding/new destination arrays**.
-The higher-priority caller-supplied reused-buffer form was not found in the
+The caller-supplied reused-buffer form was not found in the
 reviewed platform call sites. Custom application code still needs review.
 
 ## How to use this list for patch prioritization
@@ -102,8 +109,11 @@ establish that a sufficiently long attacker-controlled WebSocket key reaches it:
 the preceding validation and caller path need review. It is not included as a
 confirmed attack route in the update-prioritization table.
 
-Closed components such as Artifactory, ColdFusion, AEM Granite, ManageEngine and
-YouTrack remain candidates requiring version-specific implementation review.
+Our review did not establish implementation-level paths in closed components
+such as Artifactory, ColdFusion, AEM Granite, ManageEngine and YouTrack.
+**Calif now separately reports unauthenticated RCE in Artifactory**; our incomplete
+source review must not be interpreted as uncertainty about whether such a report
+exists. The remaining candidates still require version-specific review.
 Fingerprints, `JSESSIONID` cookies and a bundled Java version are not call-path proof.
 
 ## Source entry points

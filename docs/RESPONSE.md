@@ -3,8 +3,10 @@
 ## Prioritization
 
 Start with services on an affected runtime and VBMI+BW-capable hardware that decode
-untrusted Basic/URL Base64. Prioritize custom code that reuses destination arrays,
-internet-facing or cross-trust-boundary decoding, and bundled runtimes that would
+untrusted Basic/URL Base64. Prioritize the applications in
+[Calif's RCE report](../README.md#disclosure-update--2026-11-18), custom code that
+reuses destination arrays, internet-facing or cross-trust-boundary decoding,
+and bundled runtimes that would
 not be replaced by a host OS update. Authentication does not protect a parser that
 runs before credential verification.
 
@@ -23,12 +25,17 @@ Rebuild/redeploy container images as needed, replace embedded JDKs through a
 supported product update, restart the service, and verify the build of the running
 process. Checking a shell's default `java` is not sufficient.
 
+Consult the [dated vendor tracker](VENDOR-STATUS.md). An open or merged PR is not
+evidence of a released fix, and a recent product release date is not evidence that
+its running JVM is patched. Inventory Oracle's separate 8u-perf builds explicitly:
+the community OpenJDK 8 exclusion does not cover them.
+
 ## Interim mitigations verified in the campaign
 
 | JVM option | Effect | Operational consideration |
 | --- | --- | --- |
 | `-XX:-UseBASE64Intrinsics` | Disable accelerated Base64 intrinsics | Narrower change; benchmark Base64-heavy workloads |
-| `-XX:UseAVX=2` | Exclude AVX-512 paths more broadly | Can affect unrelated optimized operations; broader performance impact |
+| `-XX:UseAVX=2` | Exclude AVX-512 paths more broadly | x86-64 only; can prevent ARM64 JVM startup and affects unrelated optimized operations |
 
 Apply the option through the service's documented JVM-option mechanism and
 restart. These options apply to the JVM receiving them, not every process on the
@@ -51,6 +58,11 @@ defect; they can make its effect less visible.
 The safe correction is a patched runtime. Changing application allocation patterns
 solely to make crashes harder is not a complete remediation. Merely catching decode
 exceptions also fails to undo a write that has already occurred.
+
+Request buffering is not a general mitigation either: Calif describes chains
+that work with a complete request and paths outside ordinary HTTP body inspection.
+Use a patched runtime or a verified JVM mitigation, rather than relying on an
+allocation pattern, reverse-proxy setting or WAF alone.
 
 ## Telemetry and network detection limits
 
@@ -78,6 +90,10 @@ or memory corruption. The ModSecurity checks exercise synthetic traffic against
 a static server, not an exploit against Java. No validated PCAP-based Suricata,
 Sigma or Nuclei exploit-attribution detector accompanies this release. Follow the
 deployment guide's logging/privacy controls and coverage limits.
+
+These rules have not been validated against Calif's withheld product RCE chains.
+Their absence of alerts cannot exclude exploitation or confidentiality/integrity
+impact; a successful chain need not crash the JVM.
 
 Active trigger-based checks can themselves corrupt process memory. Use the passive
 inventory and code-review tools for deployment assessment. The tools in this pack

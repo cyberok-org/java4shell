@@ -3,19 +3,46 @@
 Defensive tooling and a technical assessment of the HotSpot Base64 decoding
 memory-corruption issue tracked in our campaign as **Java4Shell / CVE-2026-114938**.
 
-**The memory corruption is real. A laboratory denial-of-service scenario does
-not imply that every Java service can be crashed on demand.** Exploitation of
+**Calif now reports application-specific remote code execution, including
+unauthenticated attacks. Prompt remediation is warranted.** Exploitation of
 this path requires an affected JVM, x86-64 with **AVX-512 VBMI and BW**, an enabled
 intrinsic, and attacker-controlled data reaching the relevant decoder. Update
-affected runtimes; prioritize exposed applications and reused destination buffers.
+affected runtimes; prioritize exposed applications, reported RCE targets and
+custom code with reused destination buffers.
 There is no evidence here supporting a blanket shutdown of Java infrastructure.
 
 This repository publishes **runtime inventory, source-review tools and passive
 ModSecurity indicators**, not an
-exploit or an active remote vulnerability probe. RCE is **not demonstrated by
-our evidence**. The link between the tracked CVE and JDK-8393212 was inferred
-from source and patch analysis; do not mistake this repository for an official
-CNA/vendor advisory. See [evidence and limits](docs/EVIDENCE.md).
+exploit or an active remote vulnerability probe. Our campaign reproduced memory
+corruption and laboratory DoS; **we have not independently reproduced Calif's
+product RCE chains**. See [evidence and limits](docs/EVIDENCE.md).
+
+## Disclosure update — 2026-11-18
+
+[Calif's technical disclosure](https://calif.io/java4shell/) reports RCE in default
+application configurations, subject to the vulnerable JVM and CPU prerequisites:
+
+| Reported access requirement | Products named by Calif |
+| --- | --- |
+| **Unauthenticated RCE** | Keycloak, Atlassian Jira, Atlassian Confluence, JFrog Artifactory, Jenkins, PingFederate |
+| **Authenticated RCE** | Apache Kafka Broker, Apache Solr, Elasticsearch, Gerrit, Netflix Spinnaker |
+
+Calif also reports RCE in example Spring Boot and Apache Struts applications.
+Its publication includes technical analysis, a demonstration and a bounded local
+PoC; product-specific exploit chains are withheld at this review snapshot.
+There is no universal exploit: application-specific chains are required.
+These are **Calif's reported results**, distinct from our own tests below.
+
+Our pre-authentication Elasticsearch decoder finding does not establish pre-auth
+RCE; Calif places Elasticsearch in its authenticated category. Tomcat's absence
+from their list does not establish safety. Neither the disclosure nor our lab
+results alone establish exploitation in the wild.
+
+The CVE is now listed in the official
+[OpenJDK advisory](https://openjdk.org/groups/vulnerability/advisories/2026-11-17)
+and [Oracle security update](https://www.oracle.com/security-alerts/cspunov2026.html).
+See [vendor response and release status](docs/VENDOR-STATUS.md): an open PR,
+a mitigation and a released product with a fixed runtime are different states.
 
 ## Products to prioritize for runtime updates: quiet sinks
 
@@ -61,7 +88,8 @@ See the [full product/library matrix](docs/SURFACES.md) for named call sites,
 version qualifications, negative paths and unresolved candidates. If a listed
 path is reachable on an affected runtime, schedule the runtime update even when
 normal monitoring is silent; use the verified interim mitigation if rollout must
-wait. Give custom code with reused destination buffers the highest review priority.
+wait. Review custom reused buffers urgently, without downgrading fresh-array paths
+or the applications for which Calif reports RCE.
 
 ## Contents
 
@@ -74,6 +102,7 @@ wait. Give custom code with reused destination buffers the highest review priori
 | [Technical analysis](docs/ANALYSIS.md) | Root cause, CPU gating, allocation behavior, JIT effects and exploitation limits |
 | [Surface matrix](docs/SURFACES.md) | Product/library paths, version caveats and evidence level |
 | [Response guide](docs/RESPONSE.md) | Updates, verified interim JVM options, operational verification and telemetry |
+| [Vendor status](docs/VENDOR-STATUS.md) | Dated advisory and PR checks; distinction between proposals, mitigations and verified shipped fixes |
 | [Evidence](docs/EVIDENCE.md) | Sanitized control logs, provenance, supported conclusions and open questions |
 
 ## Quick start
@@ -117,7 +146,7 @@ runtime evidence; it is not an assertion that the application is secure.
   tail. Part of that store exceeds the destination allocation; the short forms
   studied produced up to 62 bytes beyond a normally allocated destination.
 - A caller-supplied, long-lived destination made adjacent live-object corruption
-  repeatable in the laboratory. This is the priority code pattern to review.
+  repeatable in the laboratory. This is an important custom-code review pattern.
 - Common product call sites use a newly allocated destination. Corruption can be
   externally silent because the store may land in unused allocation space.
   **No visible crash does not mean no corruption, and does not prove safety.**
@@ -144,8 +173,10 @@ JDK supplier's advisory or backport records:
 | Community 8 / 11 | Investigated upstream trees lack the affected decode intrinsic | Outside this mechanism |
 
 **A fourth version component alone does not mean fixed:** 25.0.4.1 was a
-vulnerable laboratory build. Oracle's separate **8u-perf** lineage needs vendor
-confirmation; the inventory deliberately returns unknown for that label.
+vulnerable laboratory build. Oracle's advisory explicitly lists **8u511b33-perf**
+as affected. This separate **8u-perf** lineage is not covered by the community-8
+exclusion; the inventory deliberately returns unknown for that label and requires
+manual vendor-build verification. Unknown does not mean unaffected.
 Custom builds and backports require package/vendor evidence beyond a version string.
 
 Hardware requirements are real: AVX-512 alone is insufficient; the vulnerable
@@ -162,7 +193,8 @@ through that codec.
 ## Actions
 
 1. Inventory the actual service JVM, including bundled JDKs and container images.
-2. Update to your supplier's fixed build and restart the affected processes.
+2. Update to your supplier's fixed build and restart the affected processes;
+   prioritize exposed services and the applications in Calif's RCE report.
 3. If an update is pending, evaluate `-XX:-UseBASE64Intrinsics`; check the effective
    setting in the service after restart. Measure performance on your workload.
 4. Review untrusted-input paths and especially `decode(src, dst)` with reused
@@ -188,6 +220,9 @@ These checks do not execute the vulnerability. [Validation details](docs/VALIDAT
 
 ## References
 
+- [Calif: Java4Shell — Write once, RCE everywhere](https://calif.io/java4shell/)
+- [OpenJDK vulnerability advisory, 2026-11-17](https://openjdk.org/groups/vulnerability/advisories/2026-11-17)
+- [Oracle Critical Security Patch Update, November 2026](https://www.oracle.com/security-alerts/cspunov2026.html)
 - [OpenJDK JDK-8393212 backport: Base64 optimization improvements](https://github.com/openjdk/jdk27u/commit/564fc7de7effb8a4558604a6339f1b62f3017230)
 - [JDK 17u Base64 implementation](https://github.com/openjdk/jdk17u/blob/jdk-17.0.21-ga/src/java.base/share/classes/java/util/Base64.java)
 - [JDK 17u x86 stub generator](https://github.com/openjdk/jdk17u/blob/jdk-17.0.21-ga/src/hotspot/cpu/x86/stubGenerator_x86_64.cpp)

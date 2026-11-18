@@ -65,7 +65,10 @@ sent to any service. All version logic is visible in `FIXED` and `version_status
 Limitations: custom security backports, vendor-specific versioning, locally modified
 JVMs, CPU migration after collection, stale files and unrecognized early-access
 builds cannot be resolved by string inspection. The historical version model does
-not establish vendor support policy. An Oracle 8u-perf label remains unknown.
+not establish vendor support policy. An Oracle 8u-perf label remains unknown to
+this classifier; [Oracle's advisory](https://www.oracle.com/security-alerts/cspunov2026.html)
+explicitly lists 8u511b33-perf as affected. Manually verify this separate lineage;
+the unknown result and community OpenJDK 8 exclusion do not clear it.
 
 ## Lightweight Java/Kotlin search
 
