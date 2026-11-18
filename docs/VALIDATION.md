@@ -5,13 +5,14 @@ from the vulnerability experiments summarized in [EVIDENCE.md](EVIDENCE.md).
 
 | Check | Result |
 | --- | --- |
-| Python inventory/CLI and source-search regression tests | 30 tests passed locally |
+| Python inventory/CLI, source-search and ModSecurity shape regression tests | 34 tests passed locally |
 | Version-boundary subcases | Includes 17 introduction boundary, four fixed baselines, historical branches and vulnerable 25.0.4.1 |
 | Missing/contradictory evidence | Missing CPU/flags, unreadable exports and mixed CPU capabilities remain unknown |
 | Mitigations / parsing | Both workaround flags, jcmd and PrintFlagsFinal forms, CPU spelling aliases and OpenJ9 distinction exercised |
 | Diagnostic JVM environment | Java option variables removed from helper process; no target code or agent executed by tests |
 | Source-search helper | Java/Kotlin, multiline calls, whitespace in paths, no-match and missing-root exit codes passed |
 | Semgrep 1.185.0 | All three rule test groups passed with positive/negative annotated Java fixtures |
+| ModSecurity shipped-pattern tests | 35 synthetic HTTP cases, every length from 1 through 259, and 512 valid Base64/Base64url controls; patterns read from the published config |
 | Public source links | Tomcat, Spring Security, Elasticsearch, auth0 java-jwt and protobuf linked implementations fetched and decoder calls confirmed |
 | Selected evidence | SHA-256 manifest verified against included log excerpts |
 | Publication hygiene | Selected text/log files checked for lab hostnames, personal local paths, private address literals and common secret formats; public attribution retained |
@@ -39,3 +40,19 @@ Not covered: a clean-application false-positive corpus, exhaustive Kotlin parsin
 interprocedural taint analysis, package-signature/backport attestation, Windows
 binary probing, or new exploitation runs against deployed products. This pack's
 tests never execute attack fixtures, contact target services or modify a JVM.
+
+## ModSecurity engine check
+
+The separate `modsecurity` CI job builds Debian Bookworm with Apache and
+`libapache2-mod-security2`, checks the actual configuration syntax, and replays
+the same 35 synthetic cases to a static server inside a container with
+`--network none`, no published ports, a non-root user and all capabilities dropped.
+It asserts expected rule IDs and unchanged HTTP status for the log-only policy.
+No Java backend is present. Package versions are printed by the runner; raw request
+and engine logs remain inside the disposable container. This is engine/connector
+validation, not a product-exploitation test or a production false-positive study.
+
+The optional JSON setup is exercised, including URL-safe values, JSON escapes and
+nested fields. The cases also document intentionally unsupported JWT segments and
+legacy Solr headers. ModSecurity v3/nginx and other connectors are not tested by
+this job and need deployment-specific verification.

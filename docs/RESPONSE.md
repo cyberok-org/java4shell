@@ -67,12 +67,17 @@ that no write occurred. A reported Elasticsearch crash from a separate campaign
 session lacked the corroborating fatal-error artifact in the reviewed publication
 inputs; this repository does not count it as an independently verified result.
 
-Unlike the PHP companion pack, this release does not claim validated Suricata,
-Sigma, WAF or Nuclei signatures for exploitation. Blocking all long Base64 values
-or every value ending in padding would reject legitimate traffic and miss other
-entry points. A pattern-only alert cannot establish JVM version, CPU capabilities,
-JIT execution or memory corruption. No validated PCAP-based detector accompanies
-this release.
+This release includes [nine passive ModSecurity indicators](../modsecurity/README.md)
+for selected malformed Base64 shapes, plus optional JSON processor setup. They
+default to `pass + log`. Unlike a blanket length/padding block, their anchored
+token patterns exclude valid Base64; broken/fuzzed clients and arbitrary JSON text
+can still produce alerts. Body parsing and connector behavior matter.
+
+A pattern-only alert cannot establish JVM version, CPU capabilities, JIT execution
+or memory corruption. The ModSecurity checks exercise synthetic traffic against
+a static server, not an exploit against Java. No validated PCAP-based Suricata,
+Sigma or Nuclei exploit-attribution detector accompanies this release. Follow the
+deployment guide's logging/privacy controls and coverage limits.
 
 Active trigger-based checks can themselves corrupt process memory. Use the passive
 inventory and code-review tools for deployment assessment. The tools in this pack

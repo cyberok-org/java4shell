@@ -10,7 +10,8 @@ intrinsic, and attacker-controlled data reaching the relevant decoder. Update
 affected runtimes; prioritize exposed applications and reused destination buffers.
 There is no evidence here supporting a blanket shutdown of Java infrastructure.
 
-This repository publishes **runtime inventory and source-review tools**, not an
+This repository publishes **runtime inventory, source-review tools and passive
+ModSecurity indicators**, not an
 exploit or an active remote vulnerability probe. RCE is **not demonstrated by
 our evidence**. The link between the tracked CVE and JDK-8393212 was inferred
 from source and patch analysis; do not mistake this repository for an official
@@ -69,6 +70,7 @@ wait. Give custom code with reused destination buffers the highest review priori
 | [Runtime inventory](safechecks/README.md) | Offline exports or a local diagnostic JVM; version, CPU features and effective flags; JSON output and explicit unknown results |
 | [Semgrep rules](semgrep/README.md) | Java Basic/URL decoder inventory and caller-supplied-buffer review candidates |
 | [Lightweight source search](safechecks/scan-source.sh) | Optional ripgrep search for Java/Kotlin call sites, including multiline calls |
+| [ModSecurity indicators](modsecurity/README.md) | Nine log-only HTTP detectors for selected malformed Base64 shapes; optional JSON parser setup, synthetic tests and explicit coverage limits |
 | [Technical analysis](docs/ANALYSIS.md) | Root cause, CPU gating, allocation behavior, JIT effects and exploitation limits |
 | [Surface matrix](docs/SURFACES.md) | Product/library paths, version caveats and evidence level |
 | [Response guide](docs/RESPONSE.md) | Updates, verified interim JVM options, operational verification and telemetry |
@@ -99,6 +101,10 @@ semgrep scan --config semgrep/java4shell.yaml --metrics=off /path/to/source
 # Java/Kotlin text search without Semgrep; requires rg (ripgrep).
 bash safechecks/scan-source.sh /path/to/source
 ```
+
+For WAF integration, see the [ModSecurity deployment guide](modsecurity/README.md).
+The supplied rules default to `pass + log`; they do not prove backend exposure or
+replace the JVM update. JSON inspection requires phase-1 body/parser setup.
 
 Inventory exit codes: **0** = modeled path excluded or mitigated, **1** = runtime
 prerequisites present, **2** = unknown/incomplete. Exit 1 is not proof of network
@@ -176,8 +182,9 @@ SEMGREP_SEND_METRICS=off SEMGREP_ENABLE_VERSION_CHECK=0 \
 ```
 
 The tests exercise classification boundaries, missing evidence, mitigation flags,
-CLI failure semantics and source-rule positives/negatives. They do not execute
-the vulnerability. [Validation details](docs/VALIDATION.md).
+CLI failure semantics, source-rule positives/negatives and the shipped WAF patterns.
+The isolated ModSecurity test uses a static Apache server and no Java backend.
+These checks do not execute the vulnerability. [Validation details](docs/VALIDATION.md).
 
 ## References
 

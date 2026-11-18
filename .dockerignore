@@ -1,0 +1,9 @@
+**
+!modsecurity/
+!modsecurity/**
+!tests/
+!tests/modsecurity/
+!tests/modsecurity/**
+!tests/test_modsecurity.py
+**/__pycache__/
+**/*.pyc
