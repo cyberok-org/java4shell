@@ -16,6 +16,9 @@ if [[ ! -d "$root" ]]; then
   exit 2
 fi
 echo 'Review candidates: verify decoder type, input provenance and destination lifetime.' >&2
+# The second pattern lists every Basic/URL decoder acquisition (fields, locals,
+# method references): a cached decoder's later decode(x) calls carry no factory name.
 exec rg --line-number --no-heading --multiline --glob '*.java' --glob '*.kt' \
   --regexp '(getDecoder|getUrlDecoder)\s*\(\s*\)\s*\.\s*decode\s*\(' \
+  --regexp '\bget(Url)?Decoder\s*\(\s*\)' \
   --regexp '\.decode\s*\([^(),]*,[^(),]*\)' "$@" -- "$root"

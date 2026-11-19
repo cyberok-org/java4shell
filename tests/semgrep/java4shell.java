@@ -102,3 +102,46 @@ class ExpandedReviewExamples {
         new example.Yaml().load(text);
     }
 }
+
+class StoredDecoderExamples {
+    private static final Base64.Decoder DECODER = Base64.getDecoder();
+    private final Base64.Decoder urlDecoder = Base64.getUrlDecoder();
+    private static final Base64.Decoder MIME = Base64.getMimeDecoder();
+
+    void storedDecoders(String token, java.util.List<String> values) {
+        // ruleid: java4shell-decoder-variable-inventory
+        DECODER.decode(token);
+        // ruleid: java4shell-decoder-variable-inventory
+        urlDecoder.decode(token);
+        Base64.Decoder local = Base64.getDecoder();
+        // ruleid: java4shell-decoder-variable-inventory
+        local.decode(token);
+        // A typed MIME alias stays a review candidate: trace the factory.
+        // ruleid: java4shell-decoder-variable-inventory
+        MIME.decode(token);
+        // ruleid: java4shell-one-argument-inventory
+        values.stream().map(Base64.getDecoder()::decode);
+        // ruleid: java4shell-one-argument-inventory
+        values.stream().map(Base64.getUrlDecoder()::decode);
+        // ok: java4shell-one-argument-inventory, java4shell-decoder-variable-inventory
+        values.stream().map(Base64.getMimeDecoder()::decode);
+        // ok: java4shell-decoder-variable-inventory
+        Base64.getEncoder().encode(token.getBytes());
+    }
+
+    void varDecoders(String token, byte[] source, byte[] reused) {
+        var basic = Base64.getDecoder();
+        // ruleid: java4shell-decoder-variable-inventory
+        basic.decode(token);
+        // ruleid: java4shell-decoder-variable-review
+        basic.decode(source, reused);
+        var url = Base64.getUrlDecoder();
+        // ruleid: java4shell-decoder-variable-review
+        url.decode(source, reused);
+        var mime = Base64.getMimeDecoder();
+        // ok: java4shell-decoder-variable-inventory, java4shell-decoder-variable-review
+        mime.decode(token);
+        // ok: java4shell-decoder-variable-review
+        mime.decode(source, reused);
+    }
+}

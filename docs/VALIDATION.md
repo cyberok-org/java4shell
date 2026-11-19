@@ -1,18 +1,18 @@
 # Validation of this publication
 
-Checked on 2026-11-18. These are defensive-tool and packaging checks, separate
+Checked on 2026-11-18; updated 2026-11-19 (five-part version strings, cached/`var` decoders and method references). These are defensive-tool and packaging checks, separate
 from the vulnerability experiments summarized in [EVIDENCE.md](EVIDENCE.md).
 
 | Check | Result |
 | --- | --- |
-| Python inventory/CLI, source-search and ModSecurity shape regression tests | 36 tests passed locally and in CI |
+| Python inventory/CLI, source-search and ModSecurity shape regression tests | 39 tests passed locally and in CI |
 | IDS result validation | Five scorer regression tests passed, including wrong/extra SIDs, missing alerts, changed gaps, unknown flows and malformed output |
-| Version-boundary subcases | Includes 17 introduction boundary, four fixed baselines, historical branches and vulnerable 25.0.4.1 |
+| Version-boundary subcases | Includes 17 introduction boundary, four fixed baselines, historical branches, vulnerable 25.0.4.1, Oracle's five-part last-affected builds and the unknown band before the fix baseline |
 | Missing/contradictory evidence | Missing CPU/flags, unreadable exports and mixed CPU capabilities remain unknown |
 | Mitigations / parsing | Both workaround flags, jcmd and PrintFlagsFinal forms, CPU spelling aliases and OpenJ9 distinction exercised |
 | Diagnostic JVM environment | Java option variables removed from helper process; no target code or agent executed by tests |
-| Source-search helper | Java/Kotlin, multiline calls, whitespace in paths, no-match and missing-root exit codes passed |
-| Semgrep 1.185.0 | All ten rule test groups passed; positive/negative fixtures cover size boundaries, fields/names, typed receivers, MIME exclusions/review aliases and library wrappers |
+| Source-search helper | Java/Kotlin, multiline calls, cached decoder fields, method references, MIME exclusion, whitespace in paths, no-match and missing-root exit codes passed |
+| Semgrep 1.185.0 | All eleven rule test groups passed; positive/negative fixtures cover size boundaries, fields/names, typed and `var` receivers, cached decoder fields, method references, MIME exclusions/review aliases and library wrappers |
 | ModSecurity shipped-pattern tests | 35 core cases, 26 additional opt-in cases, every length from 1 through 259, and 512 valid Base64/Base64url controls; patterns read from the published configs |
 | Suricata / Snort engines | Both passed the 442-case offline PCAP suite against digest-pinned images; exact SID sets checked and three expected gaps recorded separately |
 | Public source links | Tomcat, Spring Security, Elasticsearch, auth0 java-jwt and protobuf linked implementations fetched and decoder calls confirmed |

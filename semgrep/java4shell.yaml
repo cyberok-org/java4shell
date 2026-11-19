@@ -30,8 +30,17 @@ rules:
       cve: CVE-2026-114938
       confidence: LOW
       technology: [java]
-    patterns:
+    pattern-either:
       - pattern: (java.util.Base64.Decoder $DEC).decode($SRC, $DST)
+      # "var" locals carry no declared type; match the known Basic/URL factory.
+      - patterns:
+          - pattern-inside: |
+              var $DEC = java.util.Base64.$FACTORY();
+              ...
+          - pattern: $DEC.decode($SRC, $DST)
+          - metavariable-regex:
+              metavariable: $FACTORY
+              regex: ^(getDecoder|getUrlDecoder)$
 
   - id: java4shell-one-argument-inventory
     languages: [java]
@@ -48,6 +57,33 @@ rules:
     pattern-either:
       - pattern: java.util.Base64.getDecoder().decode($SRC)
       - pattern: java.util.Base64.getUrlDecoder().decode($SRC)
+      - pattern: java.util.Base64.getDecoder()::decode
+      - pattern: java.util.Base64.getUrlDecoder()::decode
+
+  - id: java4shell-decoder-variable-inventory
+    languages: [java]
+    severity: INFO
+    message: >-
+      One-argument call through a Base64.Decoder variable or field, such as a
+      cached static final decoder. Trace its factory: getDecoder()/getUrlDecoder()
+      are in scope, getMimeDecoder() is not. A fresh destination often makes
+      corruption externally silent; it does not make this path safe on an
+      affected runtime. Review data flow and runtime prerequisites.
+    metadata:
+      category: security
+      cve: CVE-2026-114938
+      confidence: LOW
+      technology: [java]
+    pattern-either:
+      - pattern: (java.util.Base64.Decoder $DEC).decode($SRC)
+      - patterns:
+          - pattern-inside: |
+              var $DEC = java.util.Base64.$FACTORY();
+              ...
+          - pattern: $DEC.decode($SRC)
+          - metavariable-regex:
+              metavariable: $FACTORY
+              regex: ^(getDecoder|getUrlDecoder)$
 
   - id: java4shell-inline-large-buffer-review
     languages: [java]
