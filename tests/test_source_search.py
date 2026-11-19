@@ -19,6 +19,25 @@ class SourceSearchTests(unittest.TestCase):
             self.assertIn('A.java', result.stdout)
             self.assertIn('B.kt', result.stdout)
 
+    def test_stored_decoder_and_method_reference(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'Field.java').write_text(
+                'private static final Base64.Decoder DEC = Base64.getUrlDecoder();\n'
+                'byte[] f(String t) { return DEC.decode(t); }\n')
+            (root / 'Ref.java').write_text('values.stream().map(Base64.getDecoder()::decode);\n')
+            result = subprocess.run(['bash', str(SCRIPT), folder], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn('Field.java', result.stdout)
+            self.assertIn('Ref.java', result.stdout)
+
+    def test_mime_decoder_not_listed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / 'A.java').write_text(
+                'Base64.Decoder m = Base64.getMimeDecoder();\nm.decode(text);\n')
+            result = subprocess.run(['bash', str(SCRIPT), folder], capture_output=True)
+            self.assertEqual(result.returncode, 1)
+
     def test_no_matches(self):
         with tempfile.TemporaryDirectory() as folder:
             (Path(folder) / 'A.java').write_text('Base64.getEncoder().encode(input);\n')

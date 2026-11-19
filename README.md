@@ -96,8 +96,8 @@ or the applications for which Calif reports RCE.
 | Component | Purpose |
 | --- | --- |
 | [Runtime inventory](safechecks/README.md) | Offline exports or a local diagnostic JVM; version, CPU features and effective flags; JSON output and explicit unknown results |
-| [Semgrep rules](semgrep/README.md) | Ten Java rules for decoder inventory, destination size/lifetime review and Spring/protobuf/SnakeYAML entry points |
-| [Lightweight source search](safechecks/scan-source.sh) | Optional ripgrep search for Java/Kotlin call sites, including multiline calls |
+| [Semgrep rules](semgrep/README.md) | Eleven Java rules for decoder inventory, destination size/lifetime review and Spring/protobuf/SnakeYAML entry points |
+| [Lightweight source search](safechecks/scan-source.sh) | Optional ripgrep search for Java/Kotlin call sites and Basic/URL decoder acquisitions (cached fields, method references), including multiline calls |
 | [ModSecurity indicators](modsecurity/README.md) | Nine log-only HTTP detectors for selected malformed Base64 shapes; optional JSON parser setup, synthetic tests and explicit coverage limits |
 | [Experimental IDS module](ids/README.md) | Suricata/Snort alert-only indicators, offline PCAP tests, exact SID checks and explicit gaps; adapted from jsik22 under MIT |
 | [Technical analysis](docs/ANALYSIS.md) | Root cause, CPU gating, allocation behavior, JIT effects and exploitation limits |
@@ -182,6 +182,10 @@ vulnerable laboratory build. Oracle's advisory explicitly lists **8u511b33-perf*
 as affected. This separate **8u-perf** lineage is not covered by the community-8
 exclusion; the inventory deliberately returns unknown for that label and requires
 manual vendor-build verification. Unknown does not mean unaffected.
+Oracle names the last affected builds in five-part form (**17.0.21.0.3,
+21.0.13.0.3, 25.0.5.0.3, 27.0.1.0.3** "and earlier"); the inventory parses that
+form, treats those builds and anything older as affected, and returns unknown for
+a build between them and the X.1 fix baseline (for example 17.0.21.0.4).
 Custom builds and backports require package/vendor evidence beyond a version string.
 
 Hardware requirements are real: AVX-512 alone is insufficient; the vulnerable

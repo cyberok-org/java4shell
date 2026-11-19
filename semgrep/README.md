@@ -13,7 +13,8 @@ reproducing these checks. Rules run locally; disable metrics as above.
 | --- | --- | --- |
 | `java4shell-two-argument-decode` | WARNING | Direct JDK Basic/URL call with caller-supplied destination, fresh or reused |
 | `java4shell-decoder-variable-review` | WARNING | Typed `Base64.Decoder` receiver with two arguments; trace its factory and lifetime |
-| `java4shell-one-argument-inventory` | INFO | Direct JDK Basic/URL one-argument call, including fresh-destination surfaces |
+| `java4shell-one-argument-inventory` | INFO | Direct JDK Basic/URL one-argument call or method reference (`Base64.getDecoder()::decode`), including fresh-destination surfaces |
+| `java4shell-decoder-variable-inventory` | INFO | One-argument call through a `Base64.Decoder` field or variable, e.g. a cached `static final` decoder; trace its factory |
 | `java4shell-inline-large-buffer-review` | WARNING | Inline destination with a statically evaluable size above 1024 bytes; capacity-review heuristic |
 | `java4shell-inline-buffer-review` | WARNING | Inline fresh destination of any size, including unknown/dynamic sizes |
 | `java4shell-field-destination-review` | WARNING | Qualified destination field such as `this.data` or `owner.data`; review lifetime |
@@ -22,7 +23,7 @@ reproducing these checks. Rules run locally; disable metrics as above.
 | `java4shell-protobuf-json-review` | WARNING | Protobuf JSON parser `merge`; verify library version and reachable `bytes` fields |
 | `java4shell-snakeyaml-load-review` | WARNING | SnakeYAML `load`; verify constructor behavior and reachable `!!binary` tags |
 
-There are **ten rules**. The original three IDs are retained for existing
+There are **eleven rules**. The original three IDs are retained for existing
 integrations. Additional review rules intentionally overlap: a large inline
 destination can produce the generic, inline and large-buffer findings for one
 call. Group by location when triaging; findings are not independent vulnerabilities.
@@ -37,6 +38,9 @@ they do not match every method named `decode` or infer a decoder type from its
 variable name. The rules do not claim that a field or a variable named `buf`
 proves buffer reuse. Typed MIME aliases remain review candidates in these rules
 as well; trace the factory before treating them as affected paths.
+A `var` local has no declared type, so the two typed-variable rules also match
+`var d = Base64.getDecoder()` / `getUrlDecoder()` followed by `d.decode(...)`; a
+`var` initialized with `getMimeDecoder()` is excluded because its factory is known.
 
 The **1024-byte cutoff is only a triage heuristic**, inherited from the supplied
 rule update. It is not the vulnerable input threshold, a safe capacity boundary
@@ -78,6 +82,6 @@ checks the real one-argument wrappers instead.
 
 Tests: `semgrep --test --config semgrep tests/semgrep`.
 Fixtures are inert snippets; they are never compiled or run.
-Positive and negative fixtures cover all ten rules, the 1024/1025 capacity boundary,
-dynamic sizes, typed decoder variables, MIME aliases requiring review, and
+Positive and negative fixtures cover all eleven rules, the 1024/1025 capacity boundary,
+dynamic sizes, typed and `var` decoder variables, cached decoder fields, method references, MIME aliases requiring review, and
 unrelated codecs/classes that must not match.

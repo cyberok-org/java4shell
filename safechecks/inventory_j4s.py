@@ -9,17 +9,27 @@ import subprocess
 import sys
 from pathlib import Path
 
-FIXED = {17: (17, 0, 21, 1), 21: (21, 0, 13, 1),
-         25: (25, 0, 5, 1), 27: (27, 0, 1, 1)}
+# Oracle/OpenJDK 2026-11-17 name the last affected builds in five-part form
+# ("17.0.21.0.3 and earlier"); the fix baselines are the X.1 releases. A build
+# between the two (for example 17.0.21.0.4) needs vendor evidence: unknown.
+AFFECTED_MAX = {17: (17, 0, 21, 0, 3), 21: (21, 0, 13, 0, 3),
+                25: (25, 0, 5, 0, 3), 27: (27, 0, 1, 0, 3)}
+FIXED = {17: (17, 0, 21, 1, 0), 21: (21, 0, 13, 1, 0),
+         25: (25, 0, 5, 1, 0), 27: (27, 0, 1, 1, 0)}
 HISTORICAL_LINES = {18, 19, 20, 22, 23, 24, 26}
 
 
 def parse_version(text):
-    match = re.search(r'\b(?:openjdk|java)(?:\s+version)?\s+"?(\d+(?:[._]\d+){0,3})(?=[+\s"-]|$)', text)
+    # Up to five components: Oracle builds such as "27.0.1.0.3" use all five.
+    match = re.search(r'\b(?:openjdk|java)(?:\s+version)?\s+"?(\d+(?:[._]\d+){0,4})(?=[+\s"-]|$)', text)
     if not match:
         return None
     parts = tuple(map(int, re.split(r'[._]', match.group(1))))
     return parts + (0,) * (4 - len(parts))
+
+
+def _padded(version):
+    return version + (0,) * (5 - len(version))
 
 
 def version_status(text):
@@ -36,10 +46,15 @@ def version_status(text):
         return 'historical_affected'
     if major not in FIXED or version[1] != 0:
         return 'unknown'
-    if major == 17 and version < (17, 0, 6, 0):
+    full = _padded(version)
+    if major == 17 and full < (17, 0, 6, 0, 0):
         return 'outside_range'
     # Compare the entire version: 25.0.4.1 predates 25.0.5.1 and is NOT fixed.
-    return 'fixed_range' if version >= FIXED[major] else 'affected_range'
+    if full >= FIXED[major]:
+        return 'fixed_range'
+    if full <= AFFECTED_MAX[major]:
+        return 'affected_range'
+    return 'unknown'
 
 
 def cpu_status(text, architecture=None):

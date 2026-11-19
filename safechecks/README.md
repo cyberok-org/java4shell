@@ -76,8 +76,10 @@ the unknown result and community OpenJDK 8 exclusion do not clear it.
 bash safechecks/scan-source.sh /path/to/source
 ```
 
-Requires `rg` (ripgrep). It prints Basic/URL decoder calls and two-argument `.decode`
-candidates with file/line context. It does not compile or execute target code.
+Requires `rg` (ripgrep). It prints Basic/URL decoder calls, every Basic/URL decoder
+acquisition (`getDecoder()` / `getUrlDecoder()`, so cached fields and method
+references are listed even though their later `decode(x)` calls carry no factory
+name) and two-argument `.decode` candidates with file/line context. It does not compile or execute target code.
 Exit codes follow ripgrep: 0 matches, 1 no matches, 2 error/incomplete scan.
 Normal ignore files and hidden-file exclusions apply; pass `--hidden` and/or
 `--no-ignore` after the root if you deliberately need broader coverage.

@@ -27,13 +27,27 @@ class VersionTests(unittest.TestCase):
                  '25.0.5.1': 'fixed_range', '27.0.1': 'affected_range',
                  '27.0.1.1': 'fixed_range', '11.0.33': 'outside_range',
                  '1.8.0_402': 'outside_range', '19.0.2': 'historical_affected',
-                 '28': 'unknown', '21.1.0': 'unknown'}
+                 '28': 'unknown', '21.1.0': 'unknown',
+                 # Five-part forms named by Oracle as the last affected builds.
+                 '17.0.21.0.3': 'affected_range', '21.0.13.0.3': 'affected_range',
+                 '25.0.5.0.3': 'affected_range', '27.0.1.0.3': 'affected_range',
+                 # Between the last named affected build and the fix baseline.
+                 '17.0.21.0.4': 'unknown', '27.0.1.0.9': 'unknown',
+                 '27.0.1.1.2': 'fixed_range'}
         for version, expected in cases.items():
             with self.subTest(version=version):
                 self.assertEqual(inv.version_status('openjdk version "%s"' % version), expected)
 
     def test_vendor_build_suffix(self):
         self.assertEqual(inv.parse_version('openjdk version "21.0.13.1+4-LTS"'), (21, 0, 13, 1))
+
+    def test_five_part_version(self):
+        # Elasticsearch's pre-fix bundled runtime, per docs/VENDOR-STATUS.md.
+        text = ('openjdk version "27.0.1.0.3" 2026-10-20\n'
+                'OpenJDK 64-Bit Server VM (build 27.0.1.0.3+1, mixed mode, sharing)')
+        self.assertEqual(inv.parse_version(text), (27, 0, 1, 0, 3))
+        self.assertEqual(inv.assess(text, CPU, FLAGS)['verdict'], 'potentially_exposed')
+        self.assertEqual(inv.assess(text, CPU, FLAGS)['version'], '27.0.1.0.3')
 
     def test_unquoted_format(self):
         self.assertEqual(inv.parse_version('openjdk 21.0.13 2026-10-20'), (21, 0, 13, 0))
